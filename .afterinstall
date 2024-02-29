@@ -1,0 +1,105 @@
+#!/bin/bash
+
+update() {
+    local OS=$(uname -s)
+
+    if [ "$OS" = "Darwin" ]; then
+        brew upate && brew upgrade
+    elif [ "$OS" = "Linux" ]; then
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            case $ID in
+                ubuntu)
+                    sudo apt update -y && sudo apt upgrade -y
+                    ;;
+                arch)
+                    sudo pacman -Syu
+                ;;
+                endeavouros)
+                    yay -Syu
+                    ;;
+                *)
+                    echo "This is a different Linux distribution."
+                    ;;
+            esac
+        fi
+    else
+        echo "Could not identify Operating System."
+    fi
+}
+
+install() {
+    local OS=$(uname -s)
+
+    if [ "$OS" = "Darwin" ]; then
+        # Assuming you might use brew or any other package manager on macOS
+        # echo "Installing packages on macOS: $@"
+        brew install $@
+    elif [ "$OS" = "Linux" ]; then
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            case $ID in
+                ubuntu)
+                    sudo apt install -y $@
+                    ;;
+                arch)
+                    sudo pacman -S --noconfirm $@
+                    ;;
+                endeavouros)
+                    yay -S --noconfirm $@
+                    ;;
+                *)
+                    echo "This is a different Linux distribution."
+                    ;;
+            esac
+        fi
+    else
+        echo "Could not identify Operating System."
+    fi
+}
+
+get_os_name() {
+    local OS=$(uname -s)
+
+
+    if [ "$OS" = "Darwin" ]; then
+        echo "MacOS"
+    elif [ "$OS" = "Linux" ]; then
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            echo $ID
+        fi
+    else
+        echo "Unknown"
+    fi 
+}
+
+after_install() {
+    update
+
+    # MOVE TO HOME
+    pushd $HOME
+
+    # Setup dotfiles
+    install git
+    git init
+    git remote add origin https://github.com/mfield4/dotfiles
+    git pull --set-upstream origin main -f
+
+    # Install initial packages
+    source $HOME/.config/dotfiles/$(get_os_name)/.setup
+    install $PACKAGES
+
+    # zsh setup
+    git clone https://github.com/ohmyzsh/ohmyzsh.git $HOME/.oh-my-zsh
+    git clone https://github.com/zsh-users/zsh-completions $HOME/.oh-my-zsh/custom/plugins/zsh-completions
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+    git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+    git clone https://github.com/zsh-users/zsh-history-substring-search $HOME/.oh-my-zsh/custom/plugins/zsh-history-substring-search
+    chsh -s $(which zsh)
+
+    # Setup and print ssh key
+
+    # MOVE BACK TO START
+    popd
+}
