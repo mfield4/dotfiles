@@ -6,5 +6,5 @@ My dotfile repo, containing my default confurations, as well as an install scrip
 To initialize dotfiles:
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mfield4/dotfiles/main/.afterinstall)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mfield4/dotfiles/main/.install)"
 ```

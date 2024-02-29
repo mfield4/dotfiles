@@ -129,3 +129,5 @@ after_install() {
     # MOVE BACK TO START
     popd
 }
+
+after_install
