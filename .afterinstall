@@ -58,6 +58,31 @@ install() {
     fi
 }
 
+# LINUX SPECIFIC FUNCTIONS
+# THESE DO NOTHING IN MACOS
+
+chzsh() {
+    if [ "$OS" = "Linux" ]; then
+        chsh -s $(which zsh)
+    fi
+}
+
+
+# MACOS SPECIFIC FUNCTIONS
+# THESE DO NOTHING IN LINUX
+
+cask() {
+    if [ "$OS" = "Darwin" ]; then
+       brew install --cask $@
+    fi
+}
+
+homebrew() {
+    if [ "$OS" = "Darwin" ]; then
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
+}
+
 get_os_name() {
     local OS=$(uname -s)
 
@@ -81,6 +106,8 @@ after_install() {
     pushd $HOME
 
     # Setup dotfiles
+    homebrew
+
     install git
     git init
     git remote add origin https://github.com/mfield4/dotfiles
@@ -89,6 +116,7 @@ after_install() {
     # Install initial packages
     source $HOME/.config/dotfiles/$(get_os_name)/.setup
     install $PACKAGES
+    cask $CASKS
 
     # zsh setup
     git clone https://github.com/ohmyzsh/ohmyzsh.git $HOME/.oh-my-zsh
@@ -96,9 +124,7 @@ after_install() {
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
     git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions
     git clone https://github.com/zsh-users/zsh-history-substring-search $HOME/.oh-my-zsh/custom/plugins/zsh-history-substring-search
-    chsh -s $(which zsh)
-
-    # Setup and print ssh key
+    chzsh
 
     # MOVE BACK TO START
     popd
