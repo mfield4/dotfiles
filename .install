@@ -100,13 +100,13 @@ get_os_name() {
 }
 
 after_install() {
+    # Setup dotfiles
+    homebrew
+    
     update
 
     # MOVE TO HOME
     pushd $HOME
-
-    # Setup dotfiles
-    homebrew
 
     install git
     git init
