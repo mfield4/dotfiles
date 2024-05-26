@@ -1,4 +1,14 @@
 
 PACKAGES=(\
 zsh
+docker
+docker-compose
+barrier
+discord
+steam
+google-chrome
+cmake
+base-devel
+jetbrains-toolbox
+visual-studio-code-bin
 )
