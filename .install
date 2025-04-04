@@ -120,7 +120,7 @@ after_install() {
     git pull --set-upstream origin main -f
 
     # Install initial packages
-    source $HOME/.config/dotfiles/$(get_os_name)/.setup
+    source $HOME/.config/dotfiles/$(get_os_name)/.packages
     install $PACKAGES
     cask $CASKS
 
