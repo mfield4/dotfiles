@@ -9,6 +9,9 @@ update() {
         if [ -f /etc/os-release ]; then
             . /etc/os-release
             case $ID in
+                debian)
+                    sudo apt update -y && sudo apt upgrade -y
+                    ;;
                 ubuntu)
                     sudo apt update -y && sudo apt upgrade -y
                     ;;
