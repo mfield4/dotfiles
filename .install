@@ -42,6 +42,9 @@ install() {
         if [ -f /etc/os-release ]; then
             . /etc/os-release
             case $ID in
+                debian)
+                    sudo apt install -y $@
+                    ;;
                 ubuntu)
                     sudo apt install -y $@
                     ;;
