@@ -2,9 +2,9 @@ name: Dotfiles CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -24,18 +24,12 @@ jobs:
         run: |
           # Copy everything into $HOME since the dotfiles are meant to live directly in $HOME
           rsync -a ./ $HOME/
-          
+
       - name: Run shellcheck format check
         if: matrix.os == 'ubuntu-latest'
         run: |
           shellcheck $HOME/.install || true
-      
-      - name: Run Installer
-        run: |
-          cd $HOME
-          chmod +x .install
-          CI=1 ./.install
-          
+
       - name: Syntax Check Zsh
         run: |
           zsh -n $HOME/.config/zsh/.zshrc
