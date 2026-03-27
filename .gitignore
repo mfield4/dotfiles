@@ -11,6 +11,10 @@
 .config/vim/vimrc.local
 !/.config/dotfiles/
 !/.config/dotfiles/**
+!/.config/nvim/
+!/.config/nvim/**
+.config/nvim/lua/work
+.config/nvim/README.local.md
 !/.gitignore
 !/.install
 !/README.md
