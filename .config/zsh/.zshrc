@@ -1,77 +1,121 @@
-# If you come from bash you might have to change your $PATH.
-
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
-# Set up standard history file and sizes (adjust sizes as preferred)
-HISTFILE="$HOME/.zsh_history"
+# ── History ───────────────────────────────────────────────
+HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
+mkdir -p "$(dirname "$HISTFILE")"
 HISTSIZE=100000
 SAVEHIST=100000
 
-# Append commands to the history file immediately after execution
-setopt INC_APPEND_HISTORY
-# Share across open terminals immediately
-setopt SHARE_HISTORY
+setopt INC_APPEND_HISTORY     # write immediately
+setopt SHARE_HISTORY          # share across terminals
+setopt HIST_IGNORE_ALL_DUPS   # deduplicate older entries
+setopt HIST_REDUCE_BLANKS     # trim whitespace
+setopt HIST_IGNORE_SPACE      # prefix with space to omit from history
 
-# Load the hook function module
+# ── Eternal History ───────────────────────────────────────
 autoload -Uz add-zsh-hook
-
-# Define the logging function with a macOS-compatible date format
 log_to_eternal_history() {
-    # Uses standard format string: YYYY-MM-DD HH:MM:SS Timezone
-    echo "$(date '+%Y-%m-%d %H:%M:%S %z') $$ $USER $PWD $1" >> ~/.zsh_eternal_history
+    echo "$(date '+%Y-%m-%d %H:%M:%S %z') $$ $USER $PWD $1" >> "${XDG_STATE_HOME:-$HOME/.local/state}/zsh/eternal_history"
 }
-
-# Attach our function to the preexec hook
 add-zsh-hook preexec log_to_eternal_history
 
-# Add to path
-export PATH=/$HOME/.local/bin:$PATH
-export PATH=/$HOME/bin:$PATH
+# ── PATH ──────────────────────────────────────────────────
+typeset -U PATH  # deduplicate PATH entries
+export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
+# ── Theme ─────────────────────────────────────────────────
 ZSH_THEME="robbyrussell"
 
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in $ZSH/themes/
-# If set to an empty array, this variable will have no effect.
-#ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell", "agnoster" )
-
-
-# Zsh plugins
+# ── Plugins (cross-platform) ─────────────────────────────
+# Core plugins that work everywhere
 plugins=(
-	archlinux
-	docker
-	docker-compose
-	emoji
-	git
-	git-lfs
-	git-auto-fetch
-	git-prompt
-	git-escape-magic
-	gitignore
-	golang
-	history
-	pip
-	pipenv
-	python
-	repo
-	rsync
-	sudo
-	systemd
-	vscode
-	zsh-autosuggestions
-	zsh-completions
-	zsh-syntax-highlighting
+    docker
+    docker-compose
+    emoji
+    git
+    git-lfs
+    git-auto-fetch
+    git-prompt
+    git-escape-magic
+    gitignore
+    golang
+    history
+    pip
+    python
+    repo
+    rsync
+    sudo
+    vscode
+    zsh-autosuggestions
+    zsh-completions
+    zsh-syntax-highlighting
 )
+
+# Add OS-specific plugins
+case "$(uname -s)" in
+    Darwin)
+        plugins+=(brew macos)
+        ;;
+    Linux)
+        plugins+=(systemd)
+        # Arch-family distros
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            case "$ID" in
+                arch|endeavouros|manjaro) plugins+=(archlinux) ;;
+            esac
+        fi
+        ;;
+esac
 
 source $ZSH/oh-my-zsh.sh
 
 autoload -U compinit && compinit
 
+# ── Useful Aliases ────────────────────────────────────────
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias ll="ls -lAh"
+alias la="ls -A"
+alias md="mkdir -p"
 
-# Source OS-specific configurations
+# Quick git shortcuts beyond the plugin
+alias gst="git status"
+alias gd="git diff"
+alias gdc="git diff --cached"
+alias gl="git log --oneline --graph --decorate -20"
+
+# ── Handy Functions ───────────────────────────────────────
+
+# mkcd: create a directory and cd into it
+mkcd() { mkdir -p "$1" && cd "$1"; }
+
+# extract: one command to unpack any archive
+extract() {
+    if [ -f "$1" ]; then
+        case "$1" in
+            *.tar.bz2) tar xjf "$1"   ;;
+            *.tar.gz)  tar xzf "$1"   ;;
+            *.tar.xz)  tar xJf "$1"   ;;
+            *.bz2)     bunzip2 "$1"   ;;
+            *.gz)      gunzip "$1"    ;;
+            *.tar)     tar xf "$1"    ;;
+            *.tbz2)    tar xjf "$1"   ;;
+            *.tgz)     tar xzf "$1"   ;;
+            *.zip)     unzip "$1"     ;;
+            *.Z)       uncompress "$1";;
+            *.7z)      7z x "$1"      ;;
+            *.zst)     unzstd "$1"    ;;
+            *)         echo "'$1' cannot be extracted" ;;
+        esac
+    else
+        echo "'$1' is not a file"
+    fi
+}
+
+# ── Source OS-specific configurations ─────────────────────
 OS_NAME=$(uname -s)
 if [[ "$OS_NAME" == "Darwin" ]]; then
     [ -f "$ZDOTDIR/macos.zsh" ] && source "$ZDOTDIR/macos.zsh"
@@ -79,8 +123,12 @@ elif [[ "$OS_NAME" == "Linux" ]]; then
     [ -f "$ZDOTDIR/linux.zsh" ] && source "$ZDOTDIR/linux.zsh"
 fi
 
-# Source local machine-specific overrides (not tracked in git)
+# ── Machine-local overrides (not tracked in git) ─────────
 [ -f "$ZDOTDIR/.zshrc.local" ] && source "$ZDOTDIR/.zshrc.local"
 
-# Add a pretty print at the end
-neofetch
+# ── Startup ──────────────────────────────────────────────
+if command -v fastfetch &>/dev/null; then
+    fastfetch
+elif command -v neofetch &>/dev/null; then
+    neofetch
+fi
