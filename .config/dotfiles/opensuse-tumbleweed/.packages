@@ -1,0 +1,13 @@
+
+PACKAGES=(\
+zsh
+git
+git-lfs
+curl
+wget
+vim
+cmake
+docker
+docker-compose
+fastfetch
+)

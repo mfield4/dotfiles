@@ -59,11 +59,12 @@ case "$(uname -s)" in
         ;;
     Linux)
         plugins+=(systemd)
-        # Arch-family distros
+        # Distro-specific plugins
         if [ -f /etc/os-release ]; then
             . /etc/os-release
             case "$ID" in
                 arch|endeavouros|manjaro) plugins+=(archlinux) ;;
+                opensuse-tumbleweed|opensuse-leap|opensuse) plugins+=(suse) ;;
             esac
         fi
         ;;

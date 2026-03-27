@@ -25,6 +25,9 @@ update() {
                         sudo pacman -Syu --noconfirm
                     fi
                     ;;
+                opensuse-tumbleweed|opensuse-leap|opensuse)
+                    sudo zypper refresh && sudo zypper dup --no-confirm
+                    ;;
                 *)
                     echo "This is a different Linux distribution: $ID"
                     ;;
@@ -59,6 +62,9 @@ install_packages() {
                     else
                         sudo pacman -S --noconfirm "$@"
                     fi
+                    ;;
+                opensuse-tumbleweed|opensuse-leap|opensuse)
+                    sudo zypper install --no-confirm "$@"
                     ;;
                 *)
                     echo "This is a different Linux distribution: $ID"
