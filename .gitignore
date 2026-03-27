@@ -5,6 +5,7 @@
 !/.config/zsh/
 !/.config/zsh/**
 .config/zsh/.zcompdump*
+.config/zsh/.zshrc.local
 !/.config/vim/
 !/.config/vim/**
 !/.config/dotfiles/

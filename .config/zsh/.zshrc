@@ -1,5 +1,9 @@
 # Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
+export ZSH="$HOME/.config/oh-my-zsh"
+
+# ── XDG Base Directories & App Caches ─────────────────────
+
+export ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/zcompdump"
 
 # ── History ───────────────────────────────────────────────
 HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
