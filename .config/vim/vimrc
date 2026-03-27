@@ -1,0 +1,134 @@
+" ── General ────────────────────────────────────────────────
+set nocompatible              " disable vi compatibility
+set encoding=utf-8            " sane default encoding
+set fileencoding=utf-8
+set backspace=indent,eol,start " make backspace behave normally
+set hidden                    " allow switching buffers without saving
+set autoread                  " reload files changed outside vim
+set mouse=a                   " enable mouse in all modes
+set clipboard=unnamed,unnamedplus " use system clipboard
+set belloff=all               " no bells ever
+
+" ── Display ───────────────────────────────────────────────
+syntax enable
+set number                    " line numbers
+set relativenumber            " relative line numbers (hybrid with above)
+set cursorline                " highlight current line
+set showmatch                 " flash matching brackets
+set matchtime=2
+set showcmd                   " show partial commands
+set laststatus=2              " always show status line
+set ruler                     " show cursor position
+set signcolumn=yes            " always show sign column (no jitter)
+set scrolloff=8               " keep 8 lines above/below cursor
+set sidescrolloff=8
+set wrap                      " soft wrap long lines
+set linebreak                 " wrap at word boundaries
+set termguicolors             " true color support
+
+" ── Statusline (no plugin needed) ─────────────────────────
+set statusline=
+set statusline+=\ %f          " filename
+set statusline+=\ %m%r%h%w    " modified/readonly/help/preview flags
+set statusline+=%=            " right align
+set statusline+=\ %y          " filetype
+set statusline+=\ %l:%c       " line:column
+set statusline+=\ %p%%\       " percentage through file
+
+" ── Indentation ───────────────────────────────────────────
+set autoindent
+set smartindent
+set expandtab                 " spaces, not tabs
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+set shiftround                " round indent to multiples of shiftwidth
+filetype plugin indent on
+
+" ── Search ────────────────────────────────────────────────
+set incsearch                 " search as you type
+set hlsearch                  " highlight matches
+set ignorecase                " case-insensitive…
+set smartcase                 " …unless you use uppercase
+" Press <Esc> to clear search highlight
+nnoremap <silent> <Esc> :nohlsearch<CR>
+
+" ── Splits ────────────────────────────────────────────────
+set splitbelow                " open horizontal splits below
+set splitright                " open vertical splits to the right
+
+" ── Completion ────────────────────────────────────────────
+set wildmenu                  " enhanced command-line completion
+set wildmode=longest:full,full
+set wildignore+=*.o,*.obj,*.pyc,*.class,*.swp,*~
+set completeopt=menuone,noinsert,noselect
+
+" ── Performance ───────────────────────────────────────────
+set lazyredraw                " don't redraw during macros
+set updatetime=250            " faster CursorHold (good for plugins)
+set timeoutlen=500            " mapping timeout
+set ttimeoutlen=10            " key code timeout (snappy escape)
+
+" ── Persistent Undo ───────────────────────────────────────
+if has('persistent_undo')
+    let &undodir = expand('~/.local/state/vim/undo')
+    call mkdir(&undodir, 'p', 0700)
+    set undofile
+endif
+
+" ── Swap & Backup (centralised, not littered) ─────────────
+let &directory = expand('~/.local/state/vim/swap//')
+let &backupdir = expand('~/.local/state/vim/backup//')
+call mkdir(&directory, 'p', 0700)
+call mkdir(&backupdir, 'p', 0700)
+set backup
+set swapfile
+
+" ── Keybindings ───────────────────────────────────────────
+
+" Quick save / quit
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
+
+" Move between splits with Ctrl+hjkl
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" Move visual selection up/down
+vnoremap J :m '>+1<CR>gv=gv
+vnoremap K :m '<-2<CR>gv=gv
+
+" Keep visual selection when indenting
+vnoremap < <gv
+vnoremap > >gv
+
+" Y yanks to end of line (consistent with D and C)
+nnoremap Y y$
+
+" Center screen after jumping
+nnoremap n nzzzv
+nnoremap N Nzzzv
+nnoremap <C-d> <C-d>zz
+nnoremap <C-u> <C-u>zz
+
+" ── Filetype tweaks ───────────────────────────────────────
+augroup filetypes
+    autocmd!
+    autocmd FileType make       setlocal noexpandtab
+    autocmd FileType yaml,json  setlocal ts=2 sw=2 sts=2
+    autocmd FileType html,css   setlocal ts=2 sw=2 sts=2
+    autocmd FileType javascript,typescript setlocal ts=2 sw=2 sts=2
+    autocmd FileType markdown   setlocal spell spelllang=en_us
+augroup END
+
+" ── Trim trailing whitespace on save ──────────────────────
+augroup trimwhitespace
+    autocmd!
+    autocmd BufWritePre * :%s/\s\+$//e
+augroup END
+
+" ── Colorscheme ───────────────────────────────────────────
+" Use a built-in scheme that looks decent everywhere
+silent! colorscheme retrobox

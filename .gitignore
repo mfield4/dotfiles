@@ -4,6 +4,7 @@
 !/.config/
 !/.config/zsh/
 !/.config/zsh/**
+.config/zsh/.zcompdump*
 !/.config/vim/
 !/.config/vim/**
 !/.config/dotfiles/
