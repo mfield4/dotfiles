@@ -8,6 +8,7 @@
 .config/zsh/.zshrc.local
 !/.config/vim/
 !/.config/vim/**
+.config/vim/vimrc.local
 !/.config/dotfiles/
 !/.config/dotfiles/**
 !/.gitignore

@@ -132,3 +132,9 @@ augroup END
 " ── Colorscheme ───────────────────────────────────────────
 " Use a built-in scheme that looks decent everywhere
 silent! colorscheme retrobox
+
+" ── Local Overrides ───────────────────────────────────────
+let s:dir = expand('<sfile>:p:h')
+if filereadable(s:dir . '/vimrc.local')
+    execute 'source ' . s:dir . '/vimrc.local'
+endif
