@@ -1,1 +1,14 @@
 *
+!/.github/
+!/.github/**
+!/.config/
+!/.config/zsh/
+!/.config/zsh/**
+!/.config/vim/
+!/.config/vim/**
+!/.config/dotfiles/
+!/.config/dotfiles/**
+!/.gitignore
+!/.install
+!/README.md
+!/.zshenv

@@ -1,28 +1,32 @@
 #!/bin/bash
 
+# Abort on error
+set -e
+
 update() {
     local OS=$(uname -s)
 
     if [ "$OS" = "Darwin" ]; then
-        brew upate && brew upgrade
+        brew update && brew upgrade
     elif [ "$OS" = "Linux" ]; then
         if [ -f /etc/os-release ]; then
             . /etc/os-release
             case $ID in
-                debian)
-                    sudo apt update -y && sudo apt upgrade -y
-                    ;;
-                ubuntu)
-                    sudo apt update -y && sudo apt upgrade -y
+                debian|ubuntu)
+                    sudo apt-get update -y && sudo apt-get upgrade -y
                     ;;
                 arch)
-                    sudo pacman -Syu
+                    sudo pacman -Syu --noconfirm
                 ;;
                 endeavouros)
-                    yay -Syu
+                    if command -v yay >/dev/null 2>&1; then
+                        yay -Syu --noconfirm
+                    else
+                        sudo pacman -Syu --noconfirm
+                    fi
                     ;;
                 *)
-                    echo "This is a different Linux distribution."
+                    echo "This is a different Linux distribution: $ID"
                     ;;
             esac
         fi
@@ -31,31 +35,33 @@ update() {
     fi
 }
 
-install() {
+install_packages() {
     local OS=$(uname -s)
 
     if [ "$OS" = "Darwin" ]; then
-        # Assuming you might use brew or any other package manager on macOS
-        # echo "Installing packages on macOS: $@"
-        brew install $@
+        # Check if brew exists, though we install it later
+        if command -v brew >/dev/null 2>&1; then
+            brew install "$@"
+        fi
     elif [ "$OS" = "Linux" ]; then
         if [ -f /etc/os-release ]; then
             . /etc/os-release
             case $ID in
-                debian)
-                    sudo apt install -y $@
-                    ;;
-                ubuntu)
-                    sudo apt install -y $@
+                debian|ubuntu)
+                    sudo apt-get install -y "$@"
                     ;;
                 arch)
-                    sudo pacman -S --noconfirm $@
+                    sudo pacman -S --noconfirm "$@"
                     ;;
                 endeavouros)
-                    yay -S --noconfirm $@
+                    if command -v yay >/dev/null 2>&1; then
+                        yay -S --noconfirm "$@"
+                    else
+                        sudo pacman -S --noconfirm "$@"
+                    fi
                     ;;
                 *)
-                    echo "This is a different Linux distribution."
+                    echo "This is a different Linux distribution: $ID"
                     ;;
             esac
         fi
@@ -64,45 +70,57 @@ install() {
     fi
 }
 
-# LINUX SPECIFIC FUNCTIONS
-# THESE DO NOTHING IN MACOS
-
 chzsh() {
+    local OS=$(uname -s)
     if [ "$OS" = "Linux" ]; then
-        chsh -s $(which zsh)
+        if [ -z "$CI" ]; then
+            sudo chsh -s $(which zsh) $(whoami)
+        fi
     fi
 }
 
-
-# MACOS SPECIFIC FUNCTIONS
-# THESE DO NOTHING IN LINUX
-
 cask() {
+    local OS=$(uname -s)
     if [ "$OS" = "Darwin" ]; then
-       brew install --cask $@
+        if command -v brew >/dev/null 2>&1; then
+            brew install --cask "$@"
+        fi
     fi
 }
 
 homebrew() {
+    local OS=$(uname -s)
     if [ "$OS" = "Darwin" ]; then
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        if ! command -v brew >/dev/null 2>&1; then
+            NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        fi
     fi
 }
 
 get_os_name() {
     local OS=$(uname -s)
 
-
     if [ "$OS" = "Darwin" ]; then
-        echo "MacOS"
+        echo "macos"
     elif [ "$OS" = "Linux" ]; then
         if [ -f /etc/os-release ]; then
             . /etc/os-release
             echo $ID
         fi
     else
-        echo "Unknown"
+        echo "unknown"
     fi 
+}
+
+clone_or_update() {
+    local repo_url=$1
+    local target_dir=$2
+    if [ ! -d "$target_dir" ]; then
+        git clone "$repo_url" "$target_dir"
+    else
+        echo "$target_dir already exists. Pulling latest..."
+        git -C "$target_dir" pull || true
+    fi
 }
 
 after_install() {
@@ -114,22 +132,38 @@ after_install() {
     # MOVE TO HOME
     pushd $HOME
 
-    install git
-    git init
-    git remote add origin https://github.com/mfield4/dotfiles
-    git pull --set-upstream origin main -f
+    install_packages git
+    
+    if [ ! -d ".git" ]; then
+        git init
+        git remote add origin https://github.com/mfield4/dotfiles
+        git pull --set-upstream origin main -f || true
+    fi
 
     # Install initial packages
-    source $HOME/.config/dotfiles/$(get_os_name)/.packages
-    install $PACKAGES
-    cask $CASKS
+    local OS_NAME=$(get_os_name)
+
+    # Some distributions like ubuntu use the same packages as debian conceptually, but usually we just check the direct ID
+    local PKG_FILE="$HOME/.config/dotfiles/$OS_NAME/.packages"
+    if [ -f "$PKG_FILE" ]; then
+        source "$PKG_FILE"
+        if [ -n "$PACKAGES" ]; then
+            install_packages $PACKAGES
+        fi
+        if [ -n "$CASKS" ]; then
+            cask $CASKS
+        fi
+    else
+        echo "Warning: no package file found at $PKG_FILE"
+    fi
 
     # zsh setup
-    git clone https://github.com/ohmyzsh/ohmyzsh.git $HOME/.oh-my-zsh
-    git clone https://github.com/zsh-users/zsh-completions $HOME/.oh-my-zsh/custom/plugins/zsh-completions
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
-    git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions
-    git clone https://github.com/zsh-users/zsh-history-substring-search $HOME/.oh-my-zsh/custom/plugins/zsh-history-substring-search
+    clone_or_update https://github.com/ohmyzsh/ohmyzsh.git "$HOME/.oh-my-zsh"
+    clone_or_update https://github.com/zsh-users/zsh-completions "$HOME/.oh-my-zsh/custom/plugins/zsh-completions"
+    clone_or_update https://github.com/zsh-users/zsh-syntax-highlighting.git "$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    clone_or_update https://github.com/zsh-users/zsh-autosuggestions "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+    clone_or_update https://github.com/zsh-users/zsh-history-substring-search "$HOME/.oh-my-zsh/custom/plugins/zsh-history-substring-search"
+    
     chzsh
 
     # MOVE BACK TO START

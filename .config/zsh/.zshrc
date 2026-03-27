@@ -71,5 +71,16 @@ source $ZSH/oh-my-zsh.sh
 autoload -U compinit && compinit
 
 
+# Source OS-specific configurations
+OS_NAME=$(uname -s)
+if [[ "$OS_NAME" == "Darwin" ]]; then
+    [ -f "$ZDOTDIR/macos.zsh" ] && source "$ZDOTDIR/macos.zsh"
+elif [[ "$OS_NAME" == "Linux" ]]; then
+    [ -f "$ZDOTDIR/linux.zsh" ] && source "$ZDOTDIR/linux.zsh"
+fi
+
+# Source local machine-specific overrides (not tracked in git)
+[ -f "$ZDOTDIR/.zshrc.local" ] && source "$ZDOTDIR/.zshrc.local"
+
 # Add a pretty print at the end
 neofetch
