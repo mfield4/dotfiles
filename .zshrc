@@ -2,8 +2,28 @@
 
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
-export LIBVA_DRIVER_NAME="nvidia"
-export MOZ_DISABLE_RDD_SANDBOX=1
+
+# Set up standard history file and sizes (adjust sizes as preferred)
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+
+# Append commands to the history file immediately after execution
+setopt INC_APPEND_HISTORY
+# Share across open terminals immediately
+setopt SHARE_HISTORY
+
+# Load the hook function module
+autoload -Uz add-zsh-hook
+
+# Define the logging function with a macOS-compatible date format
+log_to_eternal_history() {
+    # Uses standard format string: YYYY-MM-DD HH:MM:SS Timezone
+    echo "$(date '+%Y-%m-%d %H:%M:%S %z') $$ $USER $PWD $1" >> ~/.zsh_eternal_history
+}
+
+# Attach our function to the preexec hook
+add-zsh-hook preexec log_to_eternal_history
 
 # Add to path
 export PATH=/$HOME/.local/bin:$PATH
