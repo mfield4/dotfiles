@@ -87,7 +87,7 @@ alias ....="cd ../../.."
 alias ll="ls -lAh"
 alias la="ls -A"
 alias md="mkdir -p"
-alias rm="mv -t /tmp"
+rm() { mv -- "$@" /tmp/; }
 
 # Quick git shortcuts beyond the plugin
 alias gst="git status"
