@@ -35,6 +35,7 @@ ZSH_THEME="robbyrussell"
 # ── Plugins (cross-platform) ─────────────────────────────
 # Core plugins that work everywhere
 plugins=(
+    bazel
     docker
     docker-compose
     emoji
@@ -86,6 +87,7 @@ alias ....="cd ../../.."
 alias ll="ls -lAh"
 alias la="ls -A"
 alias md="mkdir -p"
+alias rm="mv -t /tmp"
 
 # Quick git shortcuts beyond the plugin
 alias gst="git status"
