@@ -87,7 +87,15 @@ alias ....="cd ../../.."
 alias ll="ls -lAh"
 alias la="ls -A"
 alias md="mkdir -p"
-rm() { mv -- "$@" /tmp/; }
+rm() {  # guard rail: move to /tmp instead of deleting; ignores rm flags like -rf
+    local -a files
+    local arg
+    for arg in "$@"; do
+        [[ "$arg" == -* ]] || files+=("$arg")
+    done
+    (( ${#files[@]} )) || return 0
+    mv -- "${files[@]}" "$(mktemp -d /tmp/rm-trash.XXXXXX)/"
+}
 
 # Quick git shortcuts beyond the plugin
 alias gst="git status"
