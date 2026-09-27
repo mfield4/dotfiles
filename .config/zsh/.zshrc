@@ -3,8 +3,18 @@ export ZSH="$HOME/.config/zsh/oh-my-zsh"
 export ZSH_CUSTOM="$HOME/.config/zsh/custom"
 
 # ── XDG Base Directories & App Caches ─────────────────────
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
 export ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/zcompdump"
+mkdir -p "$(dirname "$ZSH_COMPDUMP")"
+
+# ── Oh My Zsh Settings ────────────────────────────────────
+zstyle ':omz:update' mode disabled
+DISABLE_AUTO_UPDATE="true"
+
 
 # ── History ───────────────────────────────────────────────
 HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
@@ -27,7 +37,11 @@ add-zsh-hook preexec log_to_eternal_history
 
 # ── PATH ──────────────────────────────────────────────────
 typeset -U PATH  # deduplicate PATH entries
-export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+export PATH="$HOME/go/bin:$HOME/.local/bin:$HOME/bin:$PATH"
+
+# ── CDPATH ────────────────────────────────────────────────
+[ -f "$HOME/.config/zsh/cdpath_helper.zsh" ] && source "$HOME/.config/zsh/cdpath_helper.zsh"
+
 
 # ── Theme ─────────────────────────────────────────────────
 ZSH_THEME="robbyrussell"
@@ -78,7 +92,17 @@ esac
 
 source $ZSH/oh-my-zsh.sh
 
-autoload -U compinit && compinit
+# compinit is already handled by oh-my-zsh.sh above with ZSH_COMPDUMP caching
+
+# Fix RPROMPT formatting and avoid trailing space when git-prompt is active alongside robbyrussell
+if (( ${+functions[git_super_status]} )); then
+    _omz_git_super_status_clean() {
+        local ZSH_THEME_GIT_PROMPT_PREFIX="("
+        local ZSH_THEME_GIT_PROMPT_SUFFIX=")"
+        git_super_status
+    }
+    RPROMPT='$(_omz_git_super_status_clean)'
+fi
 
 # ── Useful Aliases ────────────────────────────────────────
 alias ..="cd .."
@@ -89,16 +113,21 @@ alias la="ls -A"
 alias md="mkdir -p"
 rm() {  # guard rail: move to /tmp instead of deleting; ignores rm flags like -rf
     local -a files
-    local arg
+    local arg only_files=0
     for arg in "$@"; do
-        [[ "$arg" == -* ]] || files+=("$arg")
+        if (( only_files )); then
+            files+=("$arg")
+        elif [[ "$arg" == "--" ]]; then
+            only_files=1
+        elif [[ "$arg" != -* ]]; then
+            files+=("$arg")
+        fi
     done
     (( ${#files[@]} )) || return 0
     mv -- "${files[@]}" "$(mktemp -d /tmp/rm-trash.XXXXXX)/"
 }
 
 # Quick git shortcuts beyond the plugin
-alias gst="git status"
 alias gd="git diff"
 alias gdc="git diff --cached"
 alias gl="git log --oneline --graph --decorate -20"

@@ -6,6 +6,7 @@
 !/.config/zsh/**
 .config/zsh/.zcompdump*
 .config/zsh/.zshrc.local
+.config/zsh/cdpaths
 !/.config/vim/
 !/.config/vim/**
 .config/vim/vimrc.local
